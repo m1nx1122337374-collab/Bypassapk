@@ -48,11 +48,13 @@ The blueprint uses a free web-service plan to avoid silently selecting a paid in
 python -m venv .venv
 . .venv/bin/activate
 pip install -r requirements.txt
-export BOT_TOKEN='your-new-token'
+cp .env.example .env
+# Edit .env locally and replace the demo value with your new token.
+set -a; . ./.env; set +a
 python bot.py
 ```
 
-Keep the token in your shell environment or a local ignored `.env` file; never commit it. The welcome page listens at `/`, while health checks use `/healthz` on `PORT` (defaults to `10000`).
+`.env.example` shows the exact variable location with the non-working placeholder `BOT_TOKEN=1234`. Replace it only in your local `.env` file, which Git ignores. For Render, enter the real token in the service's Environment settings under key `BOT_TOKEN`; do not put it in a source file. The welcome page listens at `/`, while health checks use `/healthz` on `PORT` (defaults to `10000`).
 
 ## Privacy and safety
 
