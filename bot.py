@@ -5,7 +5,7 @@ import os
 import tempfile
 import threading
 import zipfile
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from androguard.core.apk import APK
@@ -295,14 +295,31 @@ async def receive_apk(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
-        if self.path in ("/", "/health", "/healthz"):
+        route = self.path.split("?", 1)[0]
+        if route == "/":
+            try:
+                body = Path(__file__).with_name("index.html").read_bytes()
+                status = 200
+                content_type = "text/html; charset=utf-8"
+            except OSError:
+                body = b"Welcome page is temporarily unavailable.\n"
+                status = 500
+                content_type = "text/plain; charset=utf-8"
+        elif route in ("/health", "/healthz"):
             body = b"ok\n"
-            self.send_response(200)
+            status = 200
+            content_type = "text/plain; charset=utf-8"
         else:
             body = b"not found\n"
-            self.send_response(404)
-        self.send_header("Content-Type", "text/plain; charset=utf-8")
+            status = 404
+            content_type = "text/plain; charset=utf-8"
+        self.send_response(status)
+        self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "no-referrer")
+        if route == "/":
+            self.send_header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
         self.end_headers()
         self.wfile.write(body)
 
@@ -312,9 +329,9 @@ class HealthHandler(BaseHTTPRequestHandler):
 
 def start_health_server() -> None:
     port = int(os.getenv("PORT", "10000"))
-    server = HTTPServer(("0.0.0.0", port), HealthHandler)
+    server = ThreadingHTTPServer(("0.0.0.0", port), HealthHandler)
     threading.Thread(target=server.serve_forever, name="health-server", daemon=True).start()
-    log.info("Health endpoint listening on port %s", port)
+    log.info("Welcome page and health endpoints listening on port %s", port)
 
 
 def main() -> None:

@@ -12,7 +12,8 @@ This service **does not** unpack or bypass app protections, decrypt protected pa
 - Safe source-project recommendations such as release R8, secret handling, exported-component restrictions, HTTPS, and backup-rule review.
 - Upload size, ZIP entry-count, and expanded-size limits.
 - Temporary local file storage only; the downloaded copy is deleted when analysis finishes.
-- HTTP health endpoints at `/`, `/health`, and `/healthz` for Render.
+- A responsive English welcome page at `/`, served by Render and suitable for GitHub Pages.
+- Dedicated plain-text health endpoints at `/health` and `/healthz` for Render.
 - No token or APK is committed to the repository.
 
 Telegram's hosted Bot API typically limits bot downloads to 20 MB. This project defaults to 19 MB; adjust `MAX_UPLOAD_MB` only if your Telegram Bot API setup supports the larger size.
@@ -24,7 +25,9 @@ Telegram's hosted Bot API typically limits bot downloads to 20 MB. This project 
 3. In Render, create a new Blueprint from the repository and review `render.yaml`.
 4. Set `BOT_TOKEN` in the Render service's Environment settings using the replacement token. It is a secret: never put it in `bot.py`, `render.yaml`, GitHub, or chat.
 5. Deploy. Render builds the Docker image and starts `python bot.py`.
-6. Open the Telegram bot and use `/start`.
+6. Open the Render service URL to see the welcome page, then open the Telegram bot and use `/start`.
+
+The static welcome page can also be published with GitHub Pages from the `main` branch and repository root. The default site address is `https://m1nx1122337374-collab.github.io/Bypassapk/`; a custom domain can be attached in the GitHub Pages settings if you own one. The Render site and Telegram bot are separate: the bot process still needs `BOT_TOKEN` and a running Render service.
 
 The blueprint uses a free web-service plan to avoid silently selecting a paid instance. Free services can spin down after inactivity; a polling-based bot may then be unavailable until the service wakes. For reliable always-on bot operation, select an always-on Render instance after reviewing Render's current plan and charges. No Render service has been created by this repository change.
 
@@ -49,7 +52,7 @@ export BOT_TOKEN='your-new-token'
 python bot.py
 ```
 
-Keep the token in your shell environment or a local ignored `.env` file; never commit it. The health endpoint listens on `PORT` (defaults to `10000`).
+Keep the token in your shell environment or a local ignored `.env` file; never commit it. The welcome page listens at `/`, while health checks use `/healthz` on `PORT` (defaults to `10000`).
 
 ## Privacy and safety
 

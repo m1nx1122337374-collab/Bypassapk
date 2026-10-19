@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08111f">
+  <meta name="description" content="APK Security Review — clear, static insights into Android APK metadata and manifest hardening signals.">
+  <meta property="og:title" content="APK Security Review">
+  <meta property="og:description" content="A practical first look at Android APK permissions and manifest security settings.">
+  <title>APK Security Review — Welcome</title>
+  <style>
+    :root { color-scheme: dark; --bg:#08111f; --panel:#101d30; --text:#f4f7fb; --muted:#a7b4c7; --line:rgba(193,215,244,.13); --mint:#73f0c4; --blue:#74b8ff; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; min-height:100vh; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--text); background:radial-gradient(ellipse at 78% 8%,rgba(48,105,162,.24),transparent 36%),radial-gradient(ellipse at 8% 44%,rgba(29,118,102,.12),transparent 35%),var(--bg); }
+    a { color:inherit; }
+    .wrap { width:min(1100px,calc(100% - 40px)); margin:0 auto; }
+    header { display:flex; align-items:center; justify-content:space-between; padding:24px 0; border-bottom:1px solid var(--line); }
+    .brand { display:flex; gap:12px; align-items:center; font-weight:750; letter-spacing:.01em; }
+    .mark { width:38px; height:38px; display:grid; place-items:center; border:1px solid rgba(115,240,196,.34); border-radius:12px; color:var(--mint); background:rgba(115,240,196,.08); }
+    .mark svg { width:22px; height:22px; }
+    .status { color:#bcebdc; font-size:13px; border:1px solid rgba(115,240,196,.22); background:rgba(115,240,196,.06); border-radius:999px; padding:8px 12px; }
+    main { padding:66px 0 48px; }
+    .hero { display:grid; grid-template-columns:1.1fr .9fr; gap:38px; align-items:center; }
+    .eyebrow { color:var(--mint); font-size:12px; text-transform:uppercase; letter-spacing:.18em; font-weight:750; }
+    h1 { max-width:650px; margin:18px 0; font-size:clamp(42px,6vw,70px); line-height:1.02; letter-spacing:-.055em; }
+    h1 span { color:var(--mint); }
+    .lead { max-width:600px; color:var(--muted); font-size:18px; line-height:1.7; }
+    .actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:28px; }
+    .button { display:inline-flex; justify-content:center; align-items:center; gap:9px; text-decoration:none; padding:12px 17px; border-radius:12px; font-weight:700; border:1px solid var(--line); background:rgba(255,255,255,.035); }
+    .button.primary { color:#06151a; background:var(--mint); border-color:var(--mint); }
+    .button:hover { transform:translateY(-1px); filter:brightness(1.05); }
+    .visual { min-height:335px; display:grid; place-items:center; position:relative; overflow:hidden; border:1px solid var(--line); border-radius:26px; background:linear-gradient(145deg,rgba(31,63,96,.72),rgba(13,27,44,.9)); box-shadow:0 30px 90px rgba(0,0,0,.22); }
+    .visual:before,.visual:after { content:""; position:absolute; border:1px solid rgba(116,184,255,.17); border-radius:50%; width:310px; height:310px; }
+    .visual:after { width:230px; height:230px; }
+    .shield { z-index:1; width:136px; height:150px; color:var(--mint); filter:drop-shadow(0 0 28px rgba(115,240,196,.28)); }
+    .grid { position:absolute; inset:0; opacity:.32; background-image:linear-gradient(rgba(133,183,228,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(133,183,228,.08) 1px,transparent 1px); background-size:38px 38px; mask-image:radial-gradient(ellipse at center,#000 5%,transparent 73%); }
+    .section-title { margin:70px 0 20px; font-size:24px; letter-spacing:-.02em; }
+    .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+    .card { padding:22px; background:rgba(16,29,48,.78); border:1px solid var(--line); border-radius:18px; }
+    .number { color:var(--mint); font-size:12px; letter-spacing:.13em; font-weight:800; }
+    h2 { margin:12px 0 8px; font-size:18px; }
+    .card p,.note p { margin:0; color:var(--muted); line-height:1.65; font-size:14px; }
+    .note { margin-top:18px; padding:18px 20px; border:1px solid rgba(116,184,255,.18); background:rgba(116,184,255,.055); border-radius:16px; }
+    .note strong { display:block; margin-bottom:6px; color:#c4ddff; }
+    footer { margin-top:62px; padding:22px 0 30px; border-top:1px solid var(--line); color:var(--muted); font-size:13px; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    footer a { color:#c9d9ec; text-decoration:none; }
+    @media (max-width:760px) { .hero { grid-template-columns:1fr; gap:28px; } main { padding-top:46px; } .visual { min-height:250px; } .cards { grid-template-columns:1fr; } .status { display:none; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2.8 19.2 6v5.2c0 4.7-2.9 8.1-7.2 10-4.3-1.9-7.2-5.3-7.2-10V6L12 2.8Z" stroke="currentColor" stroke-width="1.7"/><path d="m8.8 12.1 2.1 2.1 4.5-4.7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span>APK Security Review</span>
+      </div>
+      <span class="status">Static review · English-language bot</span>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="welcome-title">
+        <div>
+          <div class="eyebrow">A clearer first look at Android apps</div>
+          <h1 id="welcome-title">Welcome to <span>APK Security Review.</span></h1>
+          <p class="lead">Get a concise, static look at an Android APK’s package details, permissions and selected manifest hardening signals—then use the checklist to improve your own app’s source project.</p>
+          <div class="actions">
+            <a class="button primary" href="#how-it-works">How to get started <span aria-hidden="true">→</span></a>
+            <a class="button" href="https://github.com/m1nx1122337374-collab/Bypassapk">View the GitHub project</a>
+          </div>
+        </div>
+        <div class="visual" role="img" aria-label="Decorative shield representing app security">
+          <div class="grid"></div>
+          <svg class="shield" viewBox="0 0 120 136" fill="none" aria-hidden="true"><path d="M60 6 105 25v32c0 31-18 54-45 70C33 111 15 88 15 57V25L60 6Z" stroke="currentColor" stroke-width="3"/><path d="m39 67 14 14 29-31" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M60 18v103" stroke="currentColor" stroke-width="1" opacity=".18"/></svg>
+        </div>
+      </section>
+
+      <section id="how-it-works" aria-labelledby="steps-title">
+        <h2 class="section-title" id="steps-title">Start in three steps</h2>
+        <div class="cards">
+          <article class="card"><div class="number">STEP 01</div><h2>Open the Telegram bot</h2><p>Find the bot you configured and send <code>/start</code>. The bot menu and reports are in English.</p></article>
+          <article class="card"><div class="number">STEP 02</div><h2>Choose Security Review APK</h2><p>Send an APK as a Telegram document. The current upload limit is 19 MB.</p></article>
+          <article class="card"><div class="number">STEP 03</div><h2>Review the report</h2><p>Use the manifest findings and source-project checklist as pointers for an authorized security review.</p></article>
+        </div>
+        <div class="note"><strong>Important: a review is not a guarantee.</strong><p>This site and bot provide advisory static inspection. They do not modify or obfuscate an APK, bypass protections, or make an app impossible to reverse engineer. Only submit apps you own or are authorized to inspect.</p></div>
+      </section>
+    </main>
+
+    <footer>
+      <span>APK Security Review · A lightweight static-analysis companion</span>
+      <span><a href="https://github.com/m1nx1122337374-collab/Bypassapk">Source on GitHub</a> · <a href="/healthz">Service health</a></span>
+    </footer>
+  </div>
+</body>
+</html>
