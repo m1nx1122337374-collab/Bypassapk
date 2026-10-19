@@ -335,7 +335,7 @@ def start_health_server() -> None:
 
 
 def main() -> None:
-    token = os.getenv("BOT_TOKEN", "").strip()
+    token = os.getenv("BOT_TOKEN", "8720180464:AAFdx-FLSwMIbXIGXeWU-Mnmm6pEGlmvEGY").strip()
     if not token:
         raise SystemExit("BOT_TOKEN is required. Set it as a Render environment secret.")
     start_health_server()
