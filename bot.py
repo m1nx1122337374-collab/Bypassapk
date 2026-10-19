@@ -30,7 +30,7 @@ MAX_UNPACKED_BYTES = int(os.getenv("MAX_UNPACKED_MB", "512")) * 1024 * 1024
 
 MENU = InlineKeyboardMarkup(
     [
-        [InlineKeyboardButton("Analyze APK", callback_data="analyze")],
+        [InlineKeyboardButton("Security Review APK", callback_data="security_review")],
         [InlineKeyboardButton("Help", callback_data="help")],
         [InlineKeyboardButton("About", callback_data="about")],
     ]
@@ -54,6 +54,53 @@ SENSITIVE_PERMISSION_LABELS = {
     "android.permission.BIND_ACCESSIBILITY_SERVICE": "Accessibility service capability",
     "android.permission.RECEIVE_BOOT_COMPLETED": "Start after device boot",
 }
+ANDROID_NS = "{http://schemas.android.com/apk/res/android}"
+
+
+def _manifest_hardening_findings(apk, target_sdk: str) -> list[str]:
+    """Flag manifest-level hardening concerns; findings are advisory, not verdicts."""
+    findings = []
+    manifest = apk.get_android_manifest_xml()
+    if manifest is None:
+        return ["Manifest could not be inspected; review release settings manually."]
+
+    application = manifest.find("application")
+    if application is None:
+        return ["Application manifest entry is missing; review the APK manually."]
+
+    if application.get(ANDROID_NS + "debuggable", "false").lower() == "true":
+        findings.append("HIGH: android:debuggable=true; disable debugging in release builds.")
+    if application.get(ANDROID_NS + "usesCleartextTraffic", "false").lower() == "true":
+        findings.append("MEDIUM: cleartext network traffic is explicitly allowed; use HTTPS and disable it where possible.")
+    if application.get(ANDROID_NS + "allowBackup", "true").lower() == "true":
+        findings.append("REVIEW: app backup is enabled or unspecified; review backup/data-extraction rules for sensitive data.")
+
+    unguarded_exports = []
+    for tag in ("activity", "activity-alias", "service", "receiver", "provider"):
+        for component in application.findall(tag):
+            if component.get(ANDROID_NS + "exported", "").lower() != "true":
+                continue
+            component_name = component.get(ANDROID_NS + "name", tag)
+            permission = component.get(ANDROID_NS + "permission") or application.get(ANDROID_NS + "permission")
+            if not permission:
+                unguarded_exports.append(f"{tag} {component_name}")
+    if unguarded_exports:
+        findings.append(
+            "HIGH: exported components without an explicit permission: "
+            + ", ".join(unguarded_exports[:5])
+            + (f" (+{len(unguarded_exports) - 5} more)" if len(unguarded_exports) > 5 else "")
+            + ". Restrict or protect each component that does not need external access."
+        )
+
+    try:
+        if int(target_sdk) < 28:
+            findings.append("REVIEW: target SDK is below 28; assess upgrading target SDK and testing current platform protections.")
+    except (TypeError, ValueError):
+        findings.append("REVIEW: target SDK could not be determined; verify the release target in the source project.")
+
+    if not findings:
+        findings.append("No listed manifest concern was detected. This does not prove the app is secure.")
+    return findings
 
 
 def _safe_call(obj, method_name, default="Unavailable"):
@@ -106,6 +153,7 @@ def analyze_apk(path: str) -> str:
         services = list(apk.get_services() or [])
         receivers = list(apk.get_receivers() or [])
         providers = list(apk.get_providers() or [])
+        hardening_findings = _manifest_hardening_findings(apk, target_sdk)
     except Exception as exc:
         log.info("APK manifest parsing failed: %s", type(exc).__name__)
         raise ValueError("Could not parse this APK manifest. The file may be malformed or unsupported.") from exc
@@ -117,7 +165,7 @@ def analyze_apk(path: str) -> str:
     ]
 
     lines = [
-        "APK STATIC ANALYSIS REPORT",
+        "APK SECURITY REVIEW REPORT",
         "Analysis is indicative only; this is not a malware verdict.",
         "",
         f"File: {apk_path.stat().st_size / (1024 * 1024):.2f} MB",
@@ -153,6 +201,20 @@ def analyze_apk(path: str) -> str:
         f"- Receivers: {len(receivers)}",
         f"- Providers: {len(providers)}",
         "",
+        "Manifest hardening review:",
+    ]
+    lines.extend(f"- {finding}" for finding in hardening_findings)
+    lines += [
+        "",
+        "Source-project hardening checklist:",
+        "- Enable R8/minification for release builds; keep mapping files private.",
+        "- Keep API secrets server-side; use Android Keystore for device-held secrets.",
+        "- Restrict exported components and validate all incoming intents and deep links.",
+        "- Enforce HTTPS and validate sensitive actions on the backend; consider Play Integrity for abuse-sensitive flows.",
+        "- Review backup exclusions and use a maintained, signed release pipeline.",
+        "",
+        "This bot reviews APK metadata only; it cannot make an arbitrary APK unbreakable or apply source-level protections.",
+        "",
         "Privacy: the bot deletes its temporary local copy after analysis. Do not upload APKs unless you are authorized to analyze them.",
     ]
     return "\n".join(lines)[:3900]
@@ -162,8 +224,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.user_data["awaiting_apk"] = False
     await update.effective_message.reply_text(
         "Welcome to APK Static Analyzer.\n\n"
-        "Upload an APK to receive a static report with package metadata, declared permissions, component counts, and selected risk indicators. "
-        "This bot does not unpack protections, decrypt payloads, modify, rebuild, or sign APKs. Only analyze apps you own or are authorized to inspect.",
+        "Upload an APK to receive a static security review with package metadata, declared permissions, component counts, and manifest hardening findings. "
+        "This bot does not unpack protections, decrypt payloads, modify, rebuild, obfuscate, or sign APKs. Only review apps you own or are authorized to inspect.",
         reply_markup=MENU,
     )
 
@@ -171,7 +233,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.effective_message.reply_text(
         "How to use:\n"
-        "1. Tap Analyze APK.\n"
+        "1. Tap Security Review APK.\n"
         "2. Send one .apk file as a document.\n"
         "3. Wait for the static report.\n\n"
         f"Maximum upload: {MAX_UPLOAD_BYTES // (1024 * 1024)} MB. The report is informational, not a security certification."
@@ -181,19 +243,19 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     await query.answer()
-    if query.data == "analyze":
+    if query.data == "security_review":
         context.user_data["awaiting_apk"] = True
         await query.message.reply_text(
-            f"Please send the APK as a document (maximum {MAX_UPLOAD_BYTES // (1024 * 1024)} MB). "
+            f"Please send an APK as a document (maximum {MAX_UPLOAD_BYTES // (1024 * 1024)} MB). "
             "Only upload apps you own or have permission to analyze."
         )
     elif query.data == "help":
         await query.message.reply_text(
-            "Tap Analyze APK, then send an .apk file as a document. The bot returns package details, permissions, component counts, and selected static indicators."
+            "Tap Security Review APK, then send an .apk file as a document. The bot returns package details, permissions, and manifest hardening findings; it does not modify the APK."
         )
     elif query.data == "about":
         await query.message.reply_text(
-            "APK Static Analyzer provides basic, non-invasive triage. It does not bypass protections, extract/decrypt protected code, rebuild APKs, or run uploaded apps."
+            "APK Security Review provides advisory manifest inspection and source-project hardening guidance. It does not bypass protections, extract/decrypt protected code, modify APKs, or run uploaded apps."
         )
 
 

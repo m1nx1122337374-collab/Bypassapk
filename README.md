@@ -1,14 +1,15 @@
 # Bypassapk — Telegram APK Static Analyzer
 
-A small English-language Telegram bot that accepts an APK document and returns a static report: SHA-256, package/app/version details, SDK levels, declared permissions, component counts, DEX/native-library counts, and selected sensitive-permission indicators.
+A small English-language Telegram bot that accepts an APK document and returns a static security review: SHA-256, package/app/version details, SDK levels, declared permissions, component counts, DEX/native-library counts, selected sensitive-permission indicators, manifest hardening findings, and a source-project checklist.
 
-This service **does not** unpack or bypass app protections, decrypt protected payloads, recover keys, modify/rebuild/sign APKs, install apps, or execute uploaded code. It is intended for basic triage of apps you own or are authorized to inspect. Permission indicators are not proof of malicious behavior.
+This service **does not** unpack or bypass app protections, decrypt protected payloads, recover keys, modify/rebuild/sign or obfuscate APKs, install apps, or execute uploaded code. It is intended for basic review of apps you own or are authorized to inspect. Manifest findings are advisory, and permission indicators are not proof of malicious behavior.
 
 ## Features
 
-- Telegram inline-button menu: **Analyze APK**, **Help**, and **About**.
+- Telegram inline-button menu: **Security Review APK**, **Help**, and **About**.
 - English prompts and reports.
-- APK metadata and manifest inspection through Androguard.
+- APK metadata and manifest inspection through Androguard, including debuggable/cleartext settings and exported components without an explicit permission.
+- Safe source-project recommendations such as release R8, secret handling, exported-component restrictions, HTTPS, and backup-rule review.
 - Upload size, ZIP entry-count, and expanded-size limits.
 - Temporary local file storage only; the downloaded copy is deleted when analysis finishes.
 - HTTP health endpoints at `/`, `/health`, and `/healthz` for Render.
@@ -55,4 +56,4 @@ Keep the token in your shell environment or a local ignored `.env` file; never c
 - The bot downloads the user's Telegram document to a temporary directory, analyzes it locally, then removes that temporary copy.
 - Telegram itself receives and stores files sent through Telegram; this project cannot control Telegram's retention.
 - Do not upload apps unless you have permission to inspect them. Do not treat this basic report as a substitute for a full malware analysis or security review.
-- The original Termux unpacking/deprotection suite is intentionally not included in this bot repository. This bot exposes only non-invasive static inspection.
+- The original Termux unpacking/deprotection suite is intentionally not included in this bot repository. This bot provides advisory static inspection only; it cannot make arbitrary APKs unbreakable or apply source-level protections to a compiled binary.
