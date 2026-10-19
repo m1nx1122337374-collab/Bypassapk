@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: bypassapk-static-analyzer
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: MAX_UPLOAD_MB
+        value: "19"
+      - key: MAX_UNPACKED_MB
+        value: "512"
+      - key: MAX_ZIP_ENTRIES
+        value: "100000"
