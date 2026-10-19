@@ -27,7 +27,7 @@ Telegram's hosted Bot API typically limits bot downloads to 20 MB. This project 
 5. Deploy. Render builds the Docker image and starts `python bot.py`.
 6. Open the Render service URL to see the welcome page, then open the Telegram bot and use `/start`.
 
-The static welcome page can also be published with GitHub Pages from the `main` branch and repository root. The default site address is `https://m1nx1122337374-collab.github.io/Bypassapk/`; a custom domain can be attached in the GitHub Pages settings if you own one. The Render site and Telegram bot are separate: the bot process still needs `BOT_TOKEN` and a running Render service.
+To publish the static welcome page with GitHub Pages, open repository **Settings → Pages**, select **Deploy from a branch**, then choose branch `main` and folder `/(root)`. After GitHub finishes its build, the default site address is `https://m1nx1122337374-collab.github.io/Bypassapk/`; a custom domain can be attached there if you own one. GitHub Pages has not been enabled automatically for this repository yet. The Render site and Telegram bot are separate: the bot process still needs `BOT_TOKEN` and a running Render service.
 
 The blueprint uses a free web-service plan to avoid silently selecting a paid instance. Free services can spin down after inactivity; a polling-based bot may then be unavailable until the service wakes. For reliable always-on bot operation, select an always-on Render instance after reviewing Render's current plan and charges. No Render service has been created by this repository change.
 
